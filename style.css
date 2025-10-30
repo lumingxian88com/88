@@ -14,6 +14,7 @@ table{
    max-width:100%;
    overflow-x:auto; 
    display:block;
+   margin-top:500px;
 }
 td{
    border:1px solid #999;
@@ -27,4 +28,5 @@ td{
 @media (max-width: 768px) {
    .container {flex-direction: column;}
    .editorBox {order: -1; margin-bottom: 20px;}
+
 }
