@@ -1,48 +1,93 @@
-/* 88 數據中控中心 */
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>539 聰明對帳系統</title>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; padding: 15px; }
+        .card { background: #111; border: 2px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        textarea { width: 100%; background: #000; color: #0f0; border: 1px solid #444; padding: 10px; box-sizing: border-box; font-family: monospace; }
+        button.main-btn { width: 100%; padding: 15px; background: #c00; color: #fff; border: none; font-weight: bold; font-size: 20px; cursor: pointer; border-radius: 8px; }
+        button.copy-btn { background: #444; color: #fff; border: none; padding: 5px 12px; cursor: pointer; border-radius: 4px; float: right; margin-bottom: 5px; }
+        label { color: #ff0; font-weight: bold; display: block; margin: 10px 0 5px; }
+        h2 { color: #fff; text-align: center; margin-top: 0; }
+    </style>
+</head>
+<body>
 
-// 1. 【2025 底數】
-var times=[["2025/12/31","08","10","11","26","35"],"31","37","37","48","42","40","56","45","41","39","44","47","38","49","32","30","27","37","41","36","39","43","39","53","36","48","54","46","43","35","44","34","35","34","40","38","37","46","39"];
+<div class="card">
+    <h2>🛠️ 539 數據管理系統</h2>
+    <label>📥 貼入開獎號碼 (測試用)</label>
+    <textarea id="rawInput" style="height: 60px;" placeholder="例如：2026/01/06 01,02,03,04,05"></textarea>
+    <button class="main-btn" onclick="process()">執行對帳 (數據固定不跑)</button>
+</div>
 
-// 2. 【2026 更新區】 
-var no26=[
-["2026/01/05","10","16","18","34","39"],
-["2026/01/03","22","23","31","32","38"],
-["2026/01/02","17","18","25","36","39"],
-["2026/01/01","15","16","18","29","36"]
-];
+<div class="card">
+    <label>1. t39t.js (39次數 - 累計500次)</label>
+    <button class="copy-btn" onclick="copy('out_t')">複製</button>
+    <textarea id="out_t" style="height: 80px;" readonly></textarea>
 
-// 3. 【自動計算】
-var myday = no26[0];
-var mydate = myday[0];
-var last = allHistory.slice(0, 100).map(d => d[2]);
-var times = [...base[1]]; 
+    <label>2. n100n.js (滾動池 - 剛好100天)</label>
+    <button class="copy-btn" onclick="copy('out_n')">複製</button>
+    <textarea id="out_n" style="height: 80px;" readonly></textarea>
 
-allHistory.forEach(item => {
-    if (item[0] >= "2026/01/01") {
-        item[2].forEach(n => {
-            let idx = parseInt(n) - 1;
-            if (idx >= 0 && idx < 39) times[idx]++;
-        });
+    <label>3. n26n.js (2026 紀錄)</label>
+    <button class="copy-btn" onclick="copy('out_d')">複製</button>
+    <textarea id="out_d" style="height: 80px;" readonly></textarea>
+</div>
+
+<script>
+// --- 預載 12/31 的基準數據 ---
+let baseTimes = [["2025/12/31","08","10","11","26","35"],31,37,37,48,42,40,56,45,41,39,44,47,38,49,32,30,27,37,41,36,39,43,39,53,36,48,54,46,43,35,44,34,35,34,40,38,37,46,39];
+let baseN100 = ["2025/12/31",["17","18","25","36","39"],["15","16","18","29","36"],["08","10","11","26","35"],["11","12","24","27","33"],["05","10","13","29","37"],["01","15","19","28","38"],["01","10","20","27","36"],["14","18","28","36","39"],["02","03","14","25","30"],["09","22","24","30","35"],["02","22","24","27","38"],["01","05","16","35","38"],["12","16","23","27","30"],["04","09","32","33","36"],["05","06","07","19","32"],["02","10","14","33","35"],["03","17","27","29","38"],["02","09","21","31","38"],["10","24","26","28","35"],["02","06","17","25","26"],["04","07","11","16","26"],["07","08","15","30","39"],["05","23","27","28","31"],["06","22","23","24","32"],["02","03","16","17","29"],["01","07","20","25","37"],["05","09","14","33","35"],["02","05","08","13","29"],["02","03","04","20","24"],["08","27","30","33","36"],["08","13","14","22","28"],["07","19","22","25","28"],["07","13","26","28","34"],["09","30","36","38","39"],["02","04","05","17","31"],["10","13","32","33","37"],["05","10","17","28","35"],["01","05","33","36","38"],["03","11","20","28","31"],["14","24","31","36","37"],["04","07","16","26","29"],["12","20","25","28","29"],["02","11","15","37","38"],["13","18","20","23","36"],["01","04","09","14","22"],["05","19","31","34","39"],["07","14","15","17","30"],["07","08","09","26","34"],["22","27","30","32","37"],["07","24","28","31","32"],["11","14","15","27","39"],["01","07","12","29","39"],["24","25","34","36","37"],["08","12","19","27","28"],["11","18","25","26","33"],["05","27","28","31","37"],["26","32","33","36","39"],["18","20","25","29","31"],["03","20","26","31","37"],["03","04","11","21","34"],["08","11","13","37","38"],["08","15","27","37","38"],["03","04","20","25","28"],["13","22","30","37","38"],["06","13","22","23","27"],["02","17","32","35","38"],["01","21","31","32","34"],["04","18","21","30","37"],["04","07","19","33","39"],["04","05","09","18","24"],["08","13","14","22","36"],["04","09","19","22","34"],["03","06","24","31","36"],["02","04","12","15","29"],["03","09","26","38","39"],["01","16","20","28","34"],["03","05","06","12","13"],["03","04","10","18","39"],["10","16","19","21","28"],["10","19","25","36","39"],["03","05","12","22","27"],["14","20","21","28","33"],["03","15","21","29","37"],["03","11","13","28","37"],["03","07","14","25","34"],["02","10","13","28","32"],["04","22","23","35","39"],["06","19","20","33","37"],["07","09","12","14","33"],["05","08","11","13","22"],["02","11","22","24","31"],["05","12","14","23","33"],["04","06","07","12","38"],["02","09","19","21","33"],["07","09","10","12","28"],["02","25","32","35","36"],["09","12","16","26","34"],["06","18","26","28","36"],["12","14","16","28","39"],["08","20","23","25","26"]];
+let baseN26 = [["2026/01/05","10","16","18","34","39"],["2026/01/03","22","23","31","32","38"],["2026/01/02","17","18","25","36","39"],["2026/01/01","15","16","18","29","36"]];
+
+window.onload = function() {
+    // 優先讀取瀏覽器(Ll)的舊資料
+    if(localStorage.getItem('lib_t')) {
+        render(JSON.parse(localStorage.getItem('lib_t')), JSON.parse(localStorage.getItem('lib_n')), JSON.parse(localStorage.getItem('lib_d')));
+    } else {
+        render(baseTimes, baseN100, baseN26);
     }
-});
+};
 
-// 4. 【網頁顯示控制】
-if (typeof document !== 'undefined' && document.body) {
-    var render = function() {
-        document.body.style.cssText = "background:#000; color:#0f0; font-family:monospace; padding:20px; line-height:1.8;";
-        document.body.innerHTML = `
-            <h2 style="color:red; border-bottom:1px solid #333;">88 數據中控中心</h2>
-            <p style="font-size:20px;">顯示日期：<span style="color:#fff;">${myday[0]} ${myday[1]}</span></p>
-            <p style="font-size:20px;">顯示號碼：<span style="color:#ff0;">${myday[2].join(' , ')}</span></p>
-            <hr style="border:0.5px solid #333;">
-            <p><strong>按2 (01-39 總次數)：</strong></p>
-            <div style="word-break:break-all; background:#111; padding:15px; border-radius:5px; border:1px solid #222;">
-                ${times.join(' , ')}
-            </div>
-            <p style="color:#666; font-size:12px; margin-top:50px;">※ 數據源已就緒，可供各倉庫引用。</p>
-        `;
-    };
-    if (document.readyState === 'complete') { render(); } 
-    else { window.addEventListener('load', render); }
+function process() {
+    let input = document.getElementById('rawInput').value;
+    let match = input.match(/(\d{4}\/\d{2}\/\d{2})[\s\S]*?(\d{2})\s*,\s*(\d{2})\s*,\s*(\d{2})\s*,\s*(\d{2})\s*,\s*(\d{2})/);
+    if(!match) return alert("格式不對喔！");
+
+    let d = match[1], ns = [match[2],match[3],match[4],match[5],match[6]];
+    let t = JSON.parse(localStorage.getItem('lib_t')) || baseTimes;
+    let n = JSON.parse(localStorage.getItem('lib_n')) || baseN100;
+    let d26 = JSON.parse(localStorage.getItem('lib_d')) || baseN26;
+
+    // 處理重複日期：先刪除舊的
+    for(let i=d26.length-1; i>=0; i--) if(d26[i][0] === d) d26.splice(i,1);
+    if(n[0] === d) { let old = n.splice(1,1)[0]; old.forEach(num => t[Number(num)]--); }
+
+    // 進一出一
+    if(n.length >= 101) { let out = n.pop(); out.forEach(num => t[Number(num)]--); }
+    n[0] = d; n.splice(1,0,ns);
+    ns.forEach(num => t[Number(num)]++);
+    t[0] = [d, ...ns]; d26.unshift([d, ...ns]);
+
+    // 儲存並渲染
+    localStorage.setItem('lib_t', JSON.stringify(t));
+    localStorage.setItem('lib_n', JSON.stringify(n));
+    localStorage.setItem('lib_d', JSON.stringify(d26));
+    render(t, n, d26);
+    document.getElementById('rawInput').value = "";
+    alert(d + " 對帳成功！數據已鎖定。");
 }
 
+function render(t, n, d) {
+    document.getElementById('out_t').value = `var times = [\n  ${JSON.stringify(t[0])},\n  ${t.slice(1).join(", ")}\n];`;
+    document.getElementById('out_n').value = `var n100n = [\n  "${n[0]}",\n${n.filter(Array.isArray).map(r => `  ${JSON.stringify(r)}`).join(",\n")}\n];`;
+    document.getElementById('out_d').value = `var n26n = [\n${d.map(r => `  ${JSON.stringify(r)}`).join(",\n")}\n];`;
+}
+
+function copy(id) { let el = document.getElementById(id); el.select(); document.execCommand("copy"); alert("複製成功！"); }
+</script>
+</body>
+</html>
